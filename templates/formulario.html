@@ -1,41 +1,74 @@
 {% extends "base.html" %}
-
-{% block title %}Formulario - Mi App Flask{% endblock %}
-
+{% block title %}{{ title }}{% endblock %}
 {% block content %}
-<section class="formulario">
-    <h1>Formulario de Entrada</h1>
+<section class="form-container">
+    <h1>Formulario de Contacto</h1>
     
-    <!-- Mostrar errores de validación del formulario -->
-    <form method="POST">
-        {{ form.hidden_tag() }}
+    <form method="POST" action="{{ url_for('formulario') }}">
+        {{ form.csrf_token }}
         
-        <div>
-            <label for="campo1">Campo 1:</label>
-            {{ form.campo1(size=32) }}
-            {% if form.campo1.errors %}
-                <ul>
-                    {% for error in form.campo1.errors %}
-                        <li>{{ error }}</li>
+        <div class="form-group">
+            {{ form.nombre.label(class="form-label") }}
+            {{ form.nombre(class="form-control") }}
+            {% if form.nombre.errors %}
+                <div class="errors">
+                    {% for error in form.nombre.errors %}
+                        <span>{{ error }}</span>
                     {% endfor %}
-                </ul>
+                </div>
             {% endif %}
         </div>
         
-        <div>
-            <label for="campo2">Campo 2:</label>
-            {{ form.campo2(size=32) }}
-            {% if form.campo2.errors %}
-                <ul>
-                    {% for error in form.campo2.errors %}
-                        <li>{{ error }}</li>
+        <div class="form-group">
+            {{ form.email.label(class="form-label") }}
+            {{ form.email(class="form-control") }}
+            {% if form.email.errors %}
+                <div class="errors">
+                    {% for error in form.email.errors %}
+                        <span>{{ error }}</span>
                     {% endfor %}
-                </ul>
+                </div>
             {% endif %}
         </div>
         
-        <div>
-            <button type="submit">Enviar</button>
+        <div class="form-group">
+            {{ form.asunto.label(class="form-label") }}
+            {{ form.asunto(class="form-control") }}
+            {% if form.asunto.errors %}
+                <div class="errors">
+                    {% for error in form.asunto.errors %}
+                        <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            {{ form.categoria.label(class="form-label") }}
+            {{ form.categoria(class="form-control") }}
+            {% if form.categoria.errors %}
+                <div class="errors">
+                    {% for error in form.categoria.errors %}
+                        <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            {{ form.mensaje.label(class="form-label") }}
+            {{ form.mensaje(class="form-control", rows=5) }}
+            {% if form.mensaje.errors %}
+                <div class="errors">
+                    {% for error in form.mensaje.errors %}
+                        <span>{{ error }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="form-group submit-group">
+            {{ form.submit(class="btn-submit") }}
         </div>
     </form>
 </section>

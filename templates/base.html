@@ -12,16 +12,15 @@
             <ul>
                 <li><a href="{{ url_for('inicio') }}">Inicio</a></li>
                 <li><a href="{{ url_for('usuario', nombre='invitado') }}">Usuario</a></li>
+                <li><a href="{{ url_for('formulario') }}">Formulario</a></li>
                 <li><a href="{{ url_for('about') }}">Acerca de</a></li>
             </ul>
         </nav>
     </header>
-
     <main>
         {% block content %}
         {% endblock %}
     </main>
-
     <footer>
         <p>&copy; 2025 Mi Primera App Flask</p>
     </footer>

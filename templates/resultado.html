@@ -1,11 +1,44 @@
 {% extends "base.html" %}
-
-{% block title %}Resultado - Mi App Flask{% endblock %}
-
+{% block title %}{{ title }}{% endblock %}
 {% block content %}
-<section class="resultado">
-    <h1>Resultado del Formulario</h1>
-    <p><strong>Campo 1:</strong> {{ campo1 }}</p>
-    <p><strong>Campo 2:</strong> {{ campo2 }}</p>
+<section class="resultado-container">
+    <h1>Datos Recibidos</h1>
+    
+    <div class="datos-resumen">
+        <p><strong>¡Gracias por tu mensaje!</strong></p>
+        <p>Hemos recibido la siguiente información:</p>
+        
+        <div class="card">
+            <div class="card-item">
+                <h3>Nombre:</h3>
+                <p>{{ datos.nombre }}</p>
+            </div>
+            
+            <div class="card-item">
+                <h3>Email:</h3>
+                <p>{{ datos.email }}</p>
+            </div>
+            
+            <div class="card-item">
+                <h3>Asunto:</h3>
+                <p>{{ datos.asunto }}</p>
+            </div>
+            
+            <div class="card-item">
+                <h3>Categoría:</h3>
+                <p>{{ datos.categoria }}</p>
+            </div>
+            
+            <div class="card-item">
+                <h3>Mensaje:</h3>
+                <p>{{ datos.mensaje }}</p>
+            </div>
+        </div>
+        
+        <div class="actions">
+            <a href="{{ url_for('formulario') }}" class="btn-link">Volver al formulario</a>
+            <a href="{{ url_for('inicio') }}" class="btn-link">Volver al inicio</a>
+        </div>
+    </div>
 </section>
 {% endblock %}
