@@ -3,12 +3,15 @@ body {
     margin: 0;
     padding: 0;
     line-height: 1.6;
+    background-color: #f0f2f5;
+    color: #333;
 }
 
 header {
     background-color: #2c3e50;
     color: white;
     padding: 1rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 nav ul {
@@ -24,29 +27,42 @@ nav a {
     text-decoration: none;
     padding: 0.5rem 1rem;
     border-radius: 4px;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    font-weight: 500;
 }
 
 nav a:hover {
     background-color: #34495e;
+    transform: translateY(-2px);
 }
 
 main {
     padding: 2rem;
     max-width: 800px;
     margin: 0 auto;
+    margin-bottom: 80px; /* Para evitar que el contenido se oculte detrás del footer */
 }
 
 section {
-    background-color: #f8f9fa;
+    background-color: #fff;
     padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+section:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
 }
 
 h1 {
+    text-align: center;
     color: #2c3e50;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 0.5rem;
 }
 
 footer {
@@ -57,8 +73,188 @@ footer {
     position: fixed;
     bottom: 0;
     width: 100%;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
 }
 
 .user-profile {
     text-align: center;
+}
+
+/* Estilos para el formulario */
+.form-container {
+    margin-top: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.05rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+    outline: none;
+}
+
+textarea.form-control {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.errors {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    margin-top: 0.4rem;
+    padding-left: 0.5rem;
+    border-left: 3px solid #e74c3c;
+}
+
+.btn-submit {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
+}
+
+.btn-submit:hover {
+    background-color: #2980b9;
+    transform: translateY(-3px);
+    box-shadow: 0 7px 14px rgba(52, 152, 219, 0.25);
+}
+
+.btn-submit:active {
+    transform: translateY(-1px);
+}
+
+.submit-group {
+    text-align: center;
+    margin-top: 2.5rem;
+}
+
+/* Estilos para la página de resultados */
+.resultado-container h1 {
+    color: #3498db;
+}
+
+.datos-resumen p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.datos-resumen p strong {
+    color: #2c3e50;
+}
+
+.card {
+    border: 1px solid #e1e4e8;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.card-item {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e1e4e8;
+}
+
+.card-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.card-item h3 {
+    color: #3498db;
+    font-size: 1.1rem;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+}
+
+.card-item p {
+    color: #555;
+    line-height: 1.5;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    justify-content: center;
+}
+
+.btn-link {
+    display: inline-block;
+    background-color: #3498db;
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.btn-link:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.welcome, .form-container, .resultado-container {
+    animation: fadeIn 0.5s ease forwards;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    nav ul {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    nav a {
+        width: 100%;
+        text-align: center;
+    }
+    
+    main {
+        padding: 1rem;
+    }
+    
+    section {
+        padding: 1.5rem;
+    }
 }

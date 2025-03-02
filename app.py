@@ -52,5 +52,5 @@ def formulario():
     # Si es GET o si el formulario no es válido, mostrar la página del formulario
     return render_template('formulario.html', title='Formulario', form=form)
 
-if __name__ == '_main_':
+if __name__ == '__main__':
     app.run(debug=True)
