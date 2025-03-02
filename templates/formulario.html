@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Formulario - Mi App Flask{% endblock %}
+
+{% block content %}
+<section class="formulario">
+    <h1>Formulario de Entrada</h1>
+    
+    <!-- Mostrar errores de validación del formulario -->
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        
+        <div>
+            <label for="campo1">Campo 1:</label>
+            {{ form.campo1(size=32) }}
+            {% if form.campo1.errors %}
+                <ul>
+                    {% for error in form.campo1.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        
+        <div>
+            <label for="campo2">Campo 2:</label>
+            {{ form.campo2(size=32) }}
+            {% if form.campo2.errors %}
+                <ul>
+                    {% for error in form.campo2.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        
+        <div>
+            <button type="submit">Enviar</button>
+        </div>
+    </form>
+</section>
+{% endblock %}
