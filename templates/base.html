@@ -3,26 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{% endblock %} - Mi App Flask</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>{% block title %}Mi Aplicación Flask{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
 </head>
 <body>
     <header>
         <nav>
-            <ul>
+            <div class="logo">Mi Aplicación Flask</div>
+            <ul class="nav-links">
                 <li><a href="{{ url_for('inicio') }}">Inicio</a></li>
-                <li><a href="{{ url_for('usuario', nombre='invitado') }}">Usuario</a></li>
-                <li><a href="{{ url_for('formulario') }}">Formulario</a></li>
                 <li><a href="{{ url_for('about') }}">Acerca de</a></li>
+                <li><a href="{{ url_for('formulario') }}">Formulario</a></li>
+                <li class="dropdown">
+                    <a href="#">Ver Datos</a>
+                    <div class="dropdown-content">
+                        <a href="{{ url_for('ver_txt') }}">TXT</a>
+                        <a href="{{ url_for('ver_json') }}">JSON</a>
+                        <a href="{{ url_for('ver_csv') }}">CSV</a>
+                        <a href="{{ url_for('ver_sqlite') }}">SQLite</a>
+                    </div>
+                </li>
             </ul>
         </nav>
     </header>
+    
     <main>
-        {% block content %}
-        {% endblock %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
     </main>
+    
     <footer>
-        <p>&copy; 2025 Mi Primera App Flask</p>
+        <p>&copy; 2025 Mi Aplicación Flask | Erick Rosero </p>
     </footer>
 </body>
 </html>

@@ -1,0 +1,49 @@
+/* Importar todos los estilos */
+@import 'base.css';
+@import 'forms.css';
+@import 'results.css';
+@import 'data-display.css';
+
+/* Animaciones generales */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.welcome, .form-container, .resultado-container, .datos-container {
+    animation: fadeIn 0.5s ease forwards;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    nav ul {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    nav a {
+        width: 100%;
+        text-align: center;
+    }
+    
+    main {
+        padding: 1rem;
+    }
+    
+    section {
+        padding: 1.5rem;
+    }
+    
+    .actions {
+        flex-direction: column;
+    }
+    
+    .btn-link {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .tabla-container {
+        overflow-x: auto;
+    }
+}

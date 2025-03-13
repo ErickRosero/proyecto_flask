@@ -1,44 +1,275 @@
 {% extends "base.html" %}
 {% block title %}{{ title }}{% endblock %}
 {% block content %}
-<section class="resultado-container">
-    <h1>Datos Recibidos</h1>
-    
-    <div class="datos-resumen">
-        <p><strong>¡Gracias por tu mensaje!</strong></p>
-        <p>Hemos recibido la siguiente información:</p>
+
+{% if vista_datos %}
+    <!-- Vista para mostrar datos persistentes -->
+    <section class="datos-container">
+        <h1>Datos almacenados en formato {{ tipo_datos|upper }}</h1>
         
-        <div class="card">
-            <div class="card-item">
-                <h3>Nombre:</h3>
-                <p>{{ datos.nombre }}</p>
+        {% if tipo_datos == 'txt' %}
+            <!-- Mostrar datos TXT -->
+            <div class="txt-content">
+                <pre>{{ contenido_txt }}</pre>
             </div>
+        
+        {% elif tipo_datos == 'json' %}
+            <!-- Mostrar datos JSON -->
+            {% if datos_json %}
+                <div class="datos-list">
+                    {% for dato in datos_json %}
+                        <div class="dato-card">
+                            <h2>{{ dato.nombre }}</h2>
+                            <p><strong>Email:</strong> {{ dato.email }}</p>
+                            <p><strong>Asunto:</strong> {{ dato.asunto }}</p>
+                            <p><strong>Categoría:</strong> {{ dato.categoria }}</p>
+                            <p><strong>Fecha:</strong> {{ dato.fecha }}</p>
+                            <div class="mensaje">
+                                {{ dato.mensaje }}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="api-info">
+                    <h3>API Endpoint:</h3>
+                    <p>Puedes acceder a estos datos en formato JSON a través de:</p>
+                    <code>{{ request.host_url }}api/datos/json</code>
+                </div>
+            {% else %}
+                <p class="no-data">No hay datos almacenados en formato JSON.</p>
+            {% endif %}
             
-            <div class="card-item">
-                <h3>Email:</h3>
-                <p>{{ datos.email }}</p>
-            </div>
+        {% elif tipo_datos == 'csv' %}
+            <!-- Mostrar datos CSV -->
+            {% if datos_csv %}
+                <div class="tabla-container">
+                    <table class="tabla-datos">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Asunto</th>
+                                <th>Categoría</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for dato in datos_csv %}
+                                <tr>
+                                    <td>{{ dato.nombre }}</td>
+                                    <td>{{ dato.email }}</td>
+                                    <td>{{ dato.asunto }}</td>
+                                    <td>{{ dato.categoria }}</td>
+                                    <td>{{ dato.fecha }}</td>
+                                    <td>
+                                        <button class="btn-ver" onclick="verMensajeCSV('{{ dato.mensaje|replace("'", "\\'") }}')">Ver mensaje</button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Modal para ver mensaje completo de CSV -->
+                <div id="mensaje-modal-csv" class="modal">
+                    <div class="modal-content">
+                        <span class="cerrar-modal" onclick="cerrarModalCSV()">&times;</span>
+                        <h3>Mensaje completo</h3>
+                        <div id="mensaje-texto-csv" class="mensaje-texto"></div>
+                    </div>
+                </div>
+                
+                <div class="api-info">
+                    <h3>API Endpoint:</h3>
+                    <p>Puedes acceder a estos datos en formato JSON a través de:</p>
+                    <code>{{ request.host_url }}api/datos/csv</code>
+                </div>
+                
+                <script>
+                    function verMensajeCSV(mensaje) {
+                        document.getElementById('mensaje-texto-csv').innerText = mensaje;
+                        document.getElementById('mensaje-modal-csv').style.display = 'block';
+                    }
+                    
+                    function cerrarModalCSV() {
+                        document.getElementById('mensaje-modal-csv').style.display = 'none';
+                    }
+                    
+                    // Cerrar al hacer clic fuera del modal CSV
+                    window.onclick = function(event) {
+                        var modalCSV = document.getElementById('mensaje-modal-csv');
+                        var modalSQLite = document.getElementById('mensaje-modal');
+                        
+                        if (event.target == modalCSV) {
+                            modalCSV.style.display = 'none';
+                        }
+                        if (event.target == modalSQLite) {
+                            modalSQLite.style.display = 'none';
+                        }
+                    }
+                </script>
+            {% else %}
+                <p class="no-data">No hay datos almacenados en formato CSV.</p>
+            {% endif %}
             
-            <div class="card-item">
-                <h3>Asunto:</h3>
-                <p>{{ datos.asunto }}</p>
-            </div>
-            
-            <div class="card-item">
-                <h3>Categoría:</h3>
-                <p>{{ datos.categoria }}</p>
-            </div>
-            
-            <div class="card-item">
-                <h3>Mensaje:</h3>
-                <p>{{ datos.mensaje }}</p>
-            </div>
-        </div>
+        {% elif tipo_datos == 'sqlite' %}
+            <!-- Mostrar datos SQLite -->
+            {% if contactos_sqlite %}
+                <div class="tabla-container">
+                    <table class="tabla-datos">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Asunto</th>
+                                <th>Categoría</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for contacto in contactos_sqlite %}
+                                <tr>
+                                    <td>{{ contacto.id }}</td>
+                                    <td>{{ contacto.nombre }}</td>
+                                    <td>{{ contacto.email }}</td>
+                                    <td>{{ contacto.asunto }}</td>
+                                    <td>{{ contacto.categoria }}</td>
+                                    <td>{{ contacto.fecha.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td>
+                                        <button class="btn-ver" onclick="verMensaje('{{ contacto.mensaje|replace("'", "\\'") }}')">Ver mensaje</button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Modal para ver mensaje completo de SQLite -->
+                <div id="mensaje-modal" class="modal">
+                    <div class="modal-content">
+                        <span class="cerrar-modal" onclick="cerrarModal()">&times;</span>
+                        <h3>Mensaje completo</h3>
+                        <div id="mensaje-texto" class="mensaje-texto"></div>
+                    </div>
+                </div>
+                
+                <div class="api-info">
+                    <h3>API Endpoint:</h3>
+                    <p>Puedes acceder a estos datos en formato JSON a través de:</p>
+                    <code>{{ request.host_url }}api/datos/sqlite</code>
+                </div>
+                
+                <script>
+                    function verMensaje(mensaje) {
+                        document.getElementById('mensaje-texto').innerText = mensaje;
+                        document.getElementById('mensaje-modal').style.display = 'block';
+                    }
+                    
+                    function cerrarModal() {
+                        document.getElementById('mensaje-modal').style.display = 'none';
+                    }
+                </script>
+            {% else %}
+                <p class="no-data">No hay datos almacenados en la base de datos SQLite.</p>
+            {% endif %}
+        {% endif %}
         
         <div class="actions">
-            <a href="{{ url_for('formulario') }}" class="btn-link">Volver al formulario</a>
             <a href="{{ url_for('inicio') }}" class="btn-link">Volver al inicio</a>
+            <a href="{{ url_for('formulario') }}" class="btn-link">Nuevo formulario</a>
         </div>
-    </div>
-</section>
+    </section>
+
+{% else %}
+    <!-- Vista original de resultados del formulario -->
+    <section class="resultado-container">
+        <h1>Datos Recibidos</h1>
+        
+        <div class="datos-resumen">
+            <p><strong>¡Gracias por tu mensaje!</strong></p>
+            <p>Hemos recibido la siguiente información:</p>
+            
+            <div class="card">
+                <div class="card-item">
+                    <h3>Nombre:</h3>
+                    <p>{{ datos.nombre }}</p>
+                </div>
+                
+                <div class="card-item">
+                    <h3>Email:</h3>
+                    <p>{{ datos.email }}</p>
+                </div>
+                
+                <div class="card-item">
+                    <h3>Asunto:</h3>
+                    <p>{{ datos.asunto }}</p>
+                </div>
+                
+                <div class="card-item">
+                    <h3>Categoría:</h3>
+                    <p>{{ datos.categoria }}</p>
+                </div>
+                
+                <div class="card-item">
+                    <h3>Mensaje:</h3>
+                    <p>{{ datos.mensaje }}</p>
+                </div>
+                
+                {% if formato_guardado %}
+                <div class="card-item formato-guardado">
+                    <h3>Formato de almacenamiento:</h3>
+                    <p>
+                        {% if formato_guardado == 'todos' %}
+                            Los datos han sido guardados en <strong>todos los formatos</strong> (TXT, JSON, CSV y SQLite).
+                        {% elif formato_guardado == 'txt' %}
+                            Los datos han sido guardados principalmente en formato <strong>TXT</strong>.
+                        {% elif formato_guardado == 'json' %}
+                            Los datos han sido guardados principalmente en formato <strong>JSON</strong>.
+                        {% elif formato_guardado == 'csv' %}
+                            Los datos han sido guardados principalmente en formato <strong>CSV</strong>.
+                        {% elif formato_guardado == 'sqlite' %}
+                            Los datos han sido guardados principalmente en <strong>SQLite</strong>.
+                        {% endif %}
+                        
+                        {% if formato_guardado != 'todos' %}
+                            <span class="nota-formatos">(Más los formatos secundarios seleccionados)</span>
+                        {% endif %}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="actions">
+                
+                {% if formato_guardado %}
+                    <div class="storage-links">
+                        <p>Ver datos almacenados:</p>
+                        <div class="storage-actions">
+                            {% if formato_guardado == 'todos' or formato_guardado == 'txt' or form.guardar_txt.data %}
+                                <a href="{{ url_for('ver_txt') }}" class="btn-link btn-txt">Ver TXT</a>
+                            {% endif %}
+                            
+                            {% if formato_guardado == 'todos' or formato_guardado == 'json' or form.guardar_json.data %}
+                                <a href="{{ url_for('ver_json') }}" class="btn-link btn-json">Ver JSON</a>
+                            {% endif %}
+                            
+                            {% if formato_guardado == 'todos' or formato_guardado == 'csv' or form.guardar_csv.data %}
+                                <a href="{{ url_for('ver_csv') }}" class="btn-link btn-csv">Ver CSV</a>
+                            {% endif %}
+                            
+                            {% if formato_guardado == 'todos' or formato_guardado == 'sqlite' or form.guardar_sqlite.data %}
+                                <a href="{{ url_for('ver_sqlite') }}" class="btn-link btn-sqlite">Ver SQLite</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endif %}
+
 {% endblock %}

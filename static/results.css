@@ -1,0 +1,430 @@
+/* Estilos para la página de resultados */
+.resultado-container h1 {
+    color: #3498db;
+}
+
+.datos-resumen p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+.datos-resumen p strong {
+    color: #2c3e50;
+}
+
+.card {
+    border: 1px solid #e1e4e8;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.card-item {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e1e4e8;
+}
+
+.card-item:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.card-item h3 {
+    color: #3498db;
+    font-size: 1.1rem;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+}
+
+.card-item p {
+    color: #555;
+    line-height: 1.5;
+}
+
+
+/* Estilos específicos para la sección de formato guardado */
+.formato-guardado {
+    background-color: #edf7fd;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1.5rem;
+}
+
+.formato-guardado h3 {
+    color: #3498db;
+}
+
+.formato-guardado strong {
+    color: #2c3e50;
+    font-weight: 700;
+}
+
+.nota-formatos {
+    display: block;
+    font-size: 0.9rem;
+    font-style: italic;
+    color: #777;
+    margin-top: 0.5rem;
+}
+
+/* Estilos para enlaces de almacenamiento */
+.storage-links {
+    margin-top: 2rem;
+    text-align: center;
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e1e4e8;
+}
+
+.storage-links p {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.storage-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+/* Botones con colores específicos para cada formato */
+.btn-txt {
+    background-color: #27ae60;
+}
+
+.btn-txt:hover {
+    background-color: #219653;
+}
+
+.btn-json {
+    background-color: #e67e22;
+}
+
+.btn-json:hover {
+    background-color: #d35400;
+}
+
+.btn-csv {
+    background-color: #8e44ad;
+}
+
+.btn-csv:hover {
+    background-color: #7d3c98;
+}
+
+.btn-sqlite {
+    background-color: #e74c3c;
+}
+
+.btn-sqlite:hover {
+    background-color: #c0392b;
+}
+
+/* Estilos para el contenedor de datos */
+.datos-container {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 2rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    animation: fadeIn 0.5s ease forwards;
+}
+
+.datos-container h1 {
+    color: #3498db;
+    text-align: center;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 0.5rem;
+}
+
+/* Para visualización TXT */
+.txt-content {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    border: 1px solid #dee2e6;
+    margin-bottom: 1.5rem;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    overflow-x: auto;
+}
+
+.txt-content pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: #333;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* Para visualización JSON */
+.datos-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.dato-card {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    padding: 1.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e1e4e8;
+}
+
+.dato-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+}
+
+.dato-card h2 {
+    color: #2c3e50;
+    font-size: 1.25rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #3498db;
+}
+
+.dato-card p {
+    margin: 0.5rem 0;
+}
+
+.dato-card strong {
+    color: #2c3e50;
+}
+
+.mensaje {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border-left: 3px solid #3498db;
+    font-style: italic;
+    color: #555;
+}
+
+/* Para visualización en tabla (CSV, SQLite) */
+.tabla-container {
+    overflow-x: auto;
+    margin-bottom: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+
+.tabla-datos {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #fff;
+}
+
+.tabla-datos th {
+    background-color: #f8f9fa;
+    color: #2c3e50;
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 15px;
+    border-bottom: 2px solid #3498db;
+}
+
+.tabla-datos td {
+    padding: 10px 15px;
+    border-bottom: 1px solid #e1e4e8;
+    vertical-align: middle;
+}
+
+.tabla-datos tr:last-child td {
+    border-bottom: none;
+}
+
+.tabla-datos tr:hover {
+    background-color: #f8f9fa;
+}
+
+.mensaje-cell {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Botones para ver mensajes */
+.btn-ver {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.btn-ver:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+.btn-ver:active {
+    transform: translateY(0);
+}
+
+/* Modal para ver mensajes completos */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    max-width: 600px;
+    width: 90%;
+    position: relative;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { 
+        opacity: 0; 
+        transform: translateY(-50px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.cerrar-modal {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    color: #aaa;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.cerrar-modal:hover {
+    color: #e74c3c;
+}
+
+.modal-content h3 {
+    color: #3498db;
+    margin-top: 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e1e4e8;
+}
+
+.mensaje-texto {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.5;
+}
+
+/* API Info */
+.api-info {
+    margin-top: 2rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+}
+
+.api-info h3 {
+    margin-top: 0;
+    color: #2c3e50;
+}
+
+.api-info code {
+    display: block;
+    padding: 0.75rem;
+    background-color: #2c3e50;
+    color: #fff;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    font-family: 'Courier New', Courier, monospace;
+    overflow-x: auto;
+}
+
+/* Mensaje de no data */
+.no-data {
+    text-align: center;
+    color: #777;
+    font-style: italic;
+    padding: 2rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px dashed #dee2e6;
+    margin-bottom: 1.5rem;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+    .datos-list {
+        grid-template-columns: 1fr;
+    }
+    
+    .storage-actions {
+        flex-direction: column;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 5% auto;
+        padding: 1.5rem;
+    }
+    
+    .tabla-datos th, 
+    .tabla-datos td {
+        padding: 8px;
+    }
+    
+    .mensaje-cell {
+        max-width: 150px;
+    }
+}

@@ -67,9 +67,93 @@
             {% endif %}
         </div>
         
+        <!-- Sección de opciones de almacenamiento -->
+        <div class="storage-options">
+            <h2 class="storage-title">Opciones de almacenamiento</h2>
+            
+            <div class="form-group radio-group">
+                <p class="form-label">{{ form.formato_almacenamiento.label }}</p>
+                <div class="radio-options">
+                    {% for option in form.formato_almacenamiento %}
+                        <div class="radio-option">
+                            {{ option }}
+                            <label for="{{ option.id }}">{{ option.label.text }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="form-group checkbox-group" id="formatos-secundarios">
+                <p class="form-label">Formatos secundarios (opcional)</p>
+                <div class="checkbox-options">
+                    <div class="checkbox-option txt-option">
+                        {{ form.guardar_txt }}
+                        <label for="{{ form.guardar_txt.id }}">{{ form.guardar_txt.label.text }}</label>
+                    </div>
+                    <div class="checkbox-option json-option">
+                        {{ form.guardar_json }}
+                        <label for="{{ form.guardar_json.id }}">{{ form.guardar_json.label.text }}</label>
+                    </div>
+                    <div class="checkbox-option csv-option">
+                        {{ form.guardar_csv }}
+                        <label for="{{ form.guardar_csv.id }}">{{ form.guardar_csv.label.text }}</label>
+                    </div>
+                    <div class="checkbox-option sqlite-option">
+                        {{ form.guardar_sqlite }}
+                        <label for="{{ form.guardar_sqlite.id }}">{{ form.guardar_sqlite.label.text }}</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="form-group submit-group">
             {{ form.submit(class="btn-submit") }}
         </div>
     </form>
 </section>
+
+<script>
+    // Script para manejar la visibilidad de las opciones secundarias según la opción principal
+    document.addEventListener('DOMContentLoaded', function() {
+        const formatoPrincipal = document.querySelectorAll('input[name="formato_almacenamiento"]');
+        const formatosSecundarios = document.getElementById('formatos-secundarios');
+        const txtOption = document.querySelector('.txt-option');
+        const jsonOption = document.querySelector('.json-option');
+        const csvOption = document.querySelector('.csv-option');
+        const sqliteOption = document.querySelector('.sqlite-option');
+        
+        // Función para actualizar la visibilidad de las opciones secundarias
+        function updateSecondaryOptions() {
+            let selectedValue = '';
+            
+            // Obtener el valor seleccionado
+            formatoPrincipal.forEach(radio => {
+                if (radio.checked) {
+                    selectedValue = radio.value;
+                }
+            });
+            
+            // Mostrar/ocultar sección de opciones secundarias
+            if (selectedValue === 'todos') {
+                formatosSecundarios.style.display = 'none';
+            } else {
+                formatosSecundarios.style.display = 'block';
+                
+                // Mostrar/ocultar opciones individuales
+                txtOption.style.display = selectedValue === 'txt' ? 'none' : 'block';
+                jsonOption.style.display = selectedValue === 'json' ? 'none' : 'block';
+                csvOption.style.display = selectedValue === 'csv' ? 'none' : 'block';
+                sqliteOption.style.display = selectedValue === 'sqlite' ? 'none' : 'block';
+            }
+        }
+        
+        // Ejecutar al cargar la página
+        updateSecondaryOptions();
+        
+        // Añadir event listeners para cuando cambie la selección
+        formatoPrincipal.forEach(radio => {
+            radio.addEventListener('change', updateSecondaryOptions);
+        });
+    });
+</script>
 {% endblock %}

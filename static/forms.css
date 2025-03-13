@@ -1,0 +1,153 @@
+/* Estilos para formularios */
+.form-container {
+    margin-top: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.05rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+    outline: none;
+}
+
+textarea.form-control {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.errors {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    margin-top: 0.4rem;
+    padding-left: 0.5rem;
+    border-left: 3px solid #e74c3c;
+}
+
+.btn-submit {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
+}
+
+.btn-submit:hover {
+    background-color: #2980b9;
+    transform: translateY(-3px);
+    box-shadow: 0 7px 14px rgba(52, 152, 219, 0.25);
+}
+
+.btn-submit:active {
+    transform: translateY(-1px);
+}
+
+.submit-group {
+    text-align: center;
+    margin-top: 2.5rem;
+}
+
+/* Estilos para las opciones de almacenamiento */
+.storage-options {
+    margin-top: 2.5rem;
+    padding: 1.5rem;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    border: 1px solid #e1e4e8;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.storage-title {
+    font-size: 1.3rem;
+    color: #3498db;
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    border-bottom: 2px solid #e1e4e8;
+    padding-bottom: 0.5rem;
+}
+
+.radio-group, .checkbox-group {
+    margin-bottom: 1.5rem;
+}
+
+.radio-options, .checkbox-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.radio-option, .checkbox-option {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.radio-option input[type="radio"],
+.checkbox-option input[type="checkbox"] {
+    margin-right: 0.5rem;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.radio-option label,
+.checkbox-option label {
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+/* Estilos para opciones específicas */
+.txt-option label {
+    color: #27ae60;
+}
+
+.json-option label {
+    color: #e67e22;
+}
+
+.csv-option label {
+    color: #8e44ad;
+}
+
+.sqlite-option label {
+    color: #e74c3c;
+}
+
+/* Animación para las opciones de almacenamiento */
+.storage-options {
+    transition: all 0.3s ease;
+}
+
+.storage-options:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+}
