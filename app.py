@@ -7,6 +7,9 @@ import os
 import json
 import csv
 from datetime import datetime
+from Conexion.conexion import get_connection, test_connection
+import mysql.connector
+from mysql.connector import Error
 
 # Obtener la ruta absoluta del directorio actual
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -74,7 +77,8 @@ class ContactoForm(FlaskForm):
             ('txt', 'Solo TXT'),
             ('json', 'Solo JSON'),
             ('csv', 'Solo CSV'),
-            ('sqlite', 'Solo SQLite')
+            ('sqlite', 'Solo SQLite'),
+            ('mysql', 'MySQL')
         ],
         default='todos'
     )
@@ -84,6 +88,7 @@ class ContactoForm(FlaskForm):
     guardar_json = BooleanField('Guardar en JSON', default=False)
     guardar_csv = BooleanField('Guardar en CSV', default=False)
     guardar_sqlite = BooleanField('Guardar en SQLite', default=False)
+    guardar_mysql = BooleanField('Guardar en MySQL', default=False)
     
     submit = SubmitField('Enviar')
 
@@ -124,6 +129,7 @@ def formulario():
             guardar_en_json(datos)
             guardar_en_csv(datos)
             guardar_en_sqlite(datos)
+            guardar_en_mysql(datos)
             
             flash('¡Formulario enviado y guardado en todos los formatos!', 'success')
         else:
@@ -136,6 +142,8 @@ def formulario():
                 guardar_en_csv(datos)
             elif formato_principal == 'sqlite':
                 guardar_en_sqlite(datos)
+            elif formato_principal == 'mysql':
+                guardar_en_mysql(datos)
             
             # Comprobar formatos secundarios
             if formato_principal != 'txt' and form.guardar_txt.data:
@@ -146,6 +154,8 @@ def formulario():
                 guardar_en_csv(datos)
             if formato_principal != 'sqlite' and form.guardar_sqlite.data:
                 guardar_en_sqlite(datos)
+            if formato_principal != 'mysql' and form.guardar_mysql.data:
+                guardar_en_mysql(datos)
             
             flash('¡Formulario enviado y guardado en los formatos seleccionados!', 'success')
         
@@ -217,7 +227,6 @@ def ver_json():
                           datos_json=datos)
 
 # Funciones para persistencia con archivos CSV
-
 def guardar_en_csv(datos):
     archivo_csv = os.path.join(BASE_DIR, 'datos', 'datos.csv')
     is_new_file = not os.path.exists(archivo_csv) or os.path.getsize(archivo_csv) == 0
@@ -330,6 +339,67 @@ def ver_sqlite():
                             tipo_datos='sqlite',
                             contactos_sqlite=[])
 
+# Funciones para persistencia con MySQL
+def guardar_en_mysql(datos):
+    connection = get_connection()
+    if connection is None:
+        print("No se pudo conectar a MySQL para guardar los datos")
+        return
+    
+    try:
+        cursor = connection.cursor()
+        # Insertar un nuevo registro en la tabla usuarios
+        query = """
+        INSERT INTO usuarios (nombre, email) 
+        VALUES (%s, %s)
+        """
+        values = (datos['nombre'], datos['email'])
+        cursor.execute(query, values)
+        connection.commit()
+        print(f"Datos guardados correctamente en MySQL. ID: {cursor.lastrowid}")
+    except Error as e:
+        print(f"Error al guardar en MySQL: {e}")
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+@app.route('/ver_mysql')
+def ver_mysql():
+    connection = get_connection()
+    if connection is None:
+        flash("No se pudo conectar a MySQL", "danger")
+        return render_template('resultado.html', title='Datos MySQL', 
+                            vista_datos=True, 
+                            tipo_datos='mysql',
+                            usuarios_mysql=[])
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM usuarios")
+        usuarios = cursor.fetchall()
+        
+        return render_template('resultado.html', title='Datos MySQL', 
+                            vista_datos=True, 
+                            tipo_datos='mysql',
+                            usuarios_mysql=usuarios)
+    except Error as e:
+        flash(f"Error al leer datos de MySQL: {e}", "danger")
+        return render_template('resultado.html', title='Datos MySQL', 
+                            vista_datos=True, 
+                            tipo_datos='mysql',
+                            usuarios_mysql=[])
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+# Ruta para probar la conexión a MySQL
+@app.route('/test_db')
+def test_db():
+    result = test_connection()
+    return jsonify(result)
+
 # API endpoints para acceso a datos
 @app.route('/api/datos/json')
 def api_datos_json():
@@ -351,9 +421,24 @@ def api_datos_csv():
     
     if os.path.exists(archivo_csv):
         with open(archivo_csv, 'r', encoding='utf-8') as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-                datos.append(dict(row))
+            lines = file.readlines()
+            
+            # Ignorar la primera línea si es encabezado
+            start_line = 1 if (lines and 'nombre' in lines[0].lower()) else 0
+            
+            for line in lines[start_line:]:
+                if line.strip():
+                    segments = line.strip().split(',')
+                    if len(segments) >= 6:
+                        dato = {
+                            'nombre': segments[0].replace('&#44;', ','),
+                            'email': segments[1].replace('&#44;', ','),
+                            'asunto': segments[2].replace('&#44;', ','),
+                            'mensaje': segments[3].replace('&#44;', ','),
+                            'categoria': segments[4].replace('&#44;', ','),
+                            'fecha': segments[5].replace('&#44;', ',')
+                        }
+                        datos.append(dato)
     
     return jsonify(datos)
 
@@ -365,6 +450,40 @@ def api_datos_sqlite():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/datos/mysql')
+def api_datos_mysql():
+    connection = get_connection()
+    if connection is None:
+        return jsonify({"error": "No se pudo conectar a MySQL"}), 500
+    
+    try:
+        cursor = connection.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM usuarios")
+        usuarios = cursor.fetchall()
+        
+        # Convertir los resultados a formato JSON serializable
+        serializable_users = []
+        for user in usuarios:
+            # Convertir datetime a string si es necesario
+            serialized_user = {k: (v.strftime('%Y-%m-%d %H:%M:%S') if isinstance(v, datetime) else v) 
+                               for k, v in user.items()}
+            serializable_users.append(serialized_user)
+        
+        return jsonify(serializable_users)
+    except Error as e:
+        return jsonify({"error": f"Error al leer datos de MySQL: {e}"}), 500
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
 if __name__ == '__main__':
-    print(f"Aplicación Flask iniciada. Base de datos: {app.config['SQLALCHEMY_DATABASE_URI']}")
+    print(f"Aplicación Flask iniciada. Base de datos SQLite: {app.config['SQLALCHEMY_DATABASE_URI']}")
+    print(f"Verificando conexión a MySQL...")
+    mysql_info = test_connection()
+    if mysql_info['status'] == 'success':
+        print(f"MySQL: {mysql_info['message']}")
+    else:
+        print(f"MySQL: {mysql_info['message']}")
+    
     app.run(debug=True)

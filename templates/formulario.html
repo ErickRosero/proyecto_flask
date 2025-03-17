@@ -102,6 +102,10 @@
                         {{ form.guardar_sqlite }}
                         <label for="{{ form.guardar_sqlite.id }}">{{ form.guardar_sqlite.label.text }}</label>
                     </div>
+                    <div class="checkbox-option mysql-option">
+                        {{ form.guardar_mysql }}
+                        <label for="{{ form.guardar_mysql.id }}">{{ form.guardar_mysql.label.text }}</label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -121,6 +125,7 @@
         const jsonOption = document.querySelector('.json-option');
         const csvOption = document.querySelector('.csv-option');
         const sqliteOption = document.querySelector('.sqlite-option');
+        const mysqlOption = document.querySelector('.mysql-option');
         
         // Función para actualizar la visibilidad de las opciones secundarias
         function updateSecondaryOptions() {
@@ -144,6 +149,7 @@
                 jsonOption.style.display = selectedValue === 'json' ? 'none' : 'block';
                 csvOption.style.display = selectedValue === 'csv' ? 'none' : 'block';
                 sqliteOption.style.display = selectedValue === 'sqlite' ? 'none' : 'block';
+                mysqlOption.style.display = selectedValue === 'mysql' ? 'none' : 'block';
             }
         }
         
