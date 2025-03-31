@@ -4,7 +4,39 @@
 
 {% block content %}
 <section class="welcome">
-    <h1>Bienvenido a mi primera aplicación Flask!</h1>
-    <p>Esta es una aplicación web construida con Flask y templates de Jinja2.</p>
+    <div class="dashboard-header">
+        <h1>Bienvenido, {{ current_user.nombre }}</h1>
+        <p>Esta es una aplicación web construida con Flask y templates de Jinja2.</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <div class="dashboard-content">
+        <div class="dashboard-card">
+            <h2>Información de usuario</h2>
+            <div class="user-info">
+                <p><strong>Nombre:</strong> {{ current_user.nombre }}</p>
+                <p><strong>Email:</strong> {{ current_user.email }}</p>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <h2>Acciones</h2>
+            <div class="dashboard-actions">
+                <a href="{{ url_for('formulario') }}" class="dashboard-action-btn">Crear nuevo formulario</a>
+                <a href="{{ url_for('ver_json') }}" class="dashboard-action-btn">Ver datos JSON</a>
+                <a href="{{ url_for('ver_csv') }}" class="dashboard-action-btn">Ver datos CSV</a>
+                <a href="{{ url_for('ver_sqlite') }}" class="dashboard-action-btn">Ver datos SQLite</a>
+                <a href="{{ url_for('ver_mysql') }}" class="dashboard-action-btn">Ver datos MySQL</a>
+            </div>
+        </div>
+    </div>
+
 </section>
 {% endblock %}

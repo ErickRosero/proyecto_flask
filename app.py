@@ -1,15 +1,18 @@
-from flask import Flask, render_template, redirect, url_for, flash, request, jsonify
+from flask import Flask, render_template, redirect, url_for, flash, request, jsonify, session
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SubmitField, SelectField, BooleanField, RadioField
-from wtforms.validators import DataRequired, Email, Length
+from wtforms import StringField, TextAreaField, SubmitField, SelectField, BooleanField, RadioField, PasswordField
+from wtforms.validators import DataRequired, Email, Length, EqualTo
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import os
 import json
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 from Conexion.conexion import get_connection, test_connection
 import mysql.connector
 from mysql.connector import Error
+from models import User
+import secrets
 
 # Obtener la ruta absoluta del directorio actual
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -19,14 +22,22 @@ os.makedirs(os.path.join(BASE_DIR, 'datos'), exist_ok=True)
 os.makedirs(os.path.join(BASE_DIR, 'database'), exist_ok=True)
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'clave_secreta_para_formularios'  # Necesario para CSRF protection
+app.config['SECRET_KEY'] = secrets.token_hex(16)  # Genera una clave aleatoria para seguridad
+app.config['JWT_SECRET'] = secrets.token_hex(32)  # Para generar tokens de sesión
 
-# Configurar la base de datos con ruta absoluta
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(BASE_DIR, "database", "usuarios.db")}'
+# Configurar la base de datos SQLite para el modelo Contacto
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(BASE_DIR, "database", "contactos.db")}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Inicializar SQLAlchemy
 db = SQLAlchemy(app)
+
+# Inicializar Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Por favor inicie sesión para acceder a esta página.'
+login_manager.login_message_category = 'info'
 
 # Definir el modelo para la base de datos SQLite
 class Contacto(db.Model):
@@ -49,15 +60,25 @@ class Contacto(db.Model):
             'fecha': self.fecha.strftime('%Y-%m-%d %H:%M:%S') if self.fecha else None
         }
 
-# Crear la base de datos y tablas
+# Crear la base de datos y tablas SQLite
 with app.app_context():
     try:
         db.create_all()
-        print(f"Base de datos creada en: {os.path.join(BASE_DIR, 'database', 'usuarios.db')}")
+        print(f"Base de datos SQLite creada en: {os.path.join(BASE_DIR, 'database', 'contactos.db')}")
     except Exception as e:
-        print(f"Error al crear la base de datos: {e}")
+        print(f"Error al crear la base de datos SQLite: {e}")
 
-# Definición del formulario usando WTForms
+# Función para cargar usuario en Flask-Login
+@login_manager.user_loader
+def load_user(user_id):
+    connection = get_connection()
+    if connection:
+        user = User.get_by_id(connection, user_id)
+        connection.close()
+        return user
+    return None
+
+# Definición del formulario de contacto usando WTForms
 class ContactoForm(FlaskForm):
     nombre = StringField('Nombre', validators=[DataRequired(), Length(min=2, max=50)])
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -92,11 +113,35 @@ class ContactoForm(FlaskForm):
     
     submit = SubmitField('Enviar')
 
+# Formulario de registro
+class RegistroForm(FlaskForm):
+    nombre = StringField('Nombre completo', validators=[DataRequired(), Length(min=2, max=100)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Contraseña', validators=[
+        DataRequired(),
+        Length(min=6, message='La contraseña debe tener al menos 6 caracteres.')
+    ])
+    confirm_password = PasswordField('Confirmar Contraseña', validators=[
+        DataRequired(),
+        EqualTo('password', message='Las contraseñas deben coincidir.')
+    ])
+    submit = SubmitField('Registrarse')
+
+# Formulario de inicio de sesión
+class LoginForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Contraseña', validators=[DataRequired()])
+    remember = BooleanField('Recordarme')
+    submit = SubmitField('Iniciar Sesión')
+
 @app.route('/')
+@login_required  # Proteger vista de usuario
+
 def inicio():
     return render_template('index.html', title='Inicio')
 
 @app.route('/usuario/<nombre>')
+@login_required  # Proteger vista de usuario
 def usuario(nombre):
     return render_template('usuario.html', title='Perfil', nombre=nombre)
 
@@ -105,6 +150,7 @@ def about():
     return render_template('about.html', title='Acerca de')
 
 @app.route('/formulario', methods=['GET', 'POST'])
+@login_required  # Proteger formulario
 def formulario():
     form = ContactoForm()
     
@@ -166,16 +212,89 @@ def formulario():
     # Si es GET o si el formulario no es válido, mostrar la página del formulario
     return render_template('formulario.html', title='Formulario', form=form)
 
-# Funciones para persistencia con archivos TXT
-def guardar_en_txt(datos):
-    archivo_txt = os.path.join(BASE_DIR, 'datos', 'datos.txt')
-    with open(archivo_txt, 'a', encoding='utf-8') as file:
-        file.write(f"\n--- Nuevo registro: {datos['fecha']} ---\n")
-        for key, value in datos.items():
-            file.write(f"{key}: {value}\n")
-        file.write("--------------------------------\n")
+# Rutas para el sistema de autenticación
+@app.route('/registro', methods=['GET', 'POST'])
+def registro():
+    # Si el usuario ya está autenticado, redirigir al inicio
+    if current_user.is_authenticated:
+        return redirect(url_for('inicio'))
+    
+    form = RegistroForm()
+    
+    if form.validate_on_submit():
+        connection = get_connection()
+        if not connection:
+            flash('Error de conexión a la base de datos', 'danger')
+            return render_template('registro.html', title='Registro', form=form)
+        
+        # Verificar si el correo ya está registrado
+        existing_user = User.get_by_email(connection, form.email.data)
+        if existing_user:
+            connection.close()
+            flash('El email ya está registrado. Por favor utilice otro.', 'warning')
+            return render_template('registro.html', title='Registro', form=form)
+        
+        # Crear nuevo usuario
+        user, error = User.create_user(
+            connection,
+            form.nombre.data,
+            form.email.data,
+            form.password.data
+        )
+        
+        connection.close()
+        
+        if user:
+            flash('¡Registro exitoso! Ahora puede iniciar sesión.', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash(f'Error al registrar usuario: {error}', 'danger')
+    
+    return render_template('registro.html', title='Registro', form=form)
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    # Si el usuario ya está autenticado, redirigir al inicio
+    if current_user.is_authenticated:
+        return redirect(url_for('inicio'))
+    
+    form = LoginForm()
+    
+    if form.validate_on_submit():
+        connection = get_connection()
+        if not connection:
+            flash('Error de conexión a la base de datos', 'danger')
+            return render_template('login.html', title='Iniciar Sesión', form=form)
+        
+        # Buscar usuario por email
+        user = User.get_by_email(connection, form.email.data)
+        
+        if user and user.check_password(form.password.data):
+            # Iniciar sesión
+            login_user(user, remember=form.remember.data)
+            connection.close()
+            
+            # Redirigir a la página solicitada originalmente o al inicio
+            next_page = request.args.get('next')
+            if next_page:
+                return redirect(next_page)
+            else:
+                return redirect(url_for('inicio'))
+        else:
+            connection.close()
+            flash('Email o contraseña incorrectos', 'danger')
+    
+    return render_template('login.html', title='Iniciar Sesión', form=form)
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    flash('Has cerrado sesión correctamente', 'info')
+    return redirect(url_for('inicio'))
+
+# Vistas protegidas para acceder a los datos
 @app.route('/ver_txt')
+@login_required
 def ver_txt():
     archivo_txt = os.path.join(BASE_DIR, 'datos', 'datos.txt')
     contenido = "No hay datos almacenados en TXT."
@@ -189,27 +308,8 @@ def ver_txt():
                           tipo_datos='txt',
                           contenido_txt=contenido)
 
-# Funciones para persistencia con archivos JSON
-def guardar_en_json(datos):
-    archivo_json = os.path.join(BASE_DIR, 'datos', 'datos.json')
-    all_data = []
-    
-    # Comprobar si existe el archivo
-    if os.path.exists(archivo_json):
-        with open(archivo_json, 'r', encoding='utf-8') as file:
-            try:
-                all_data = json.load(file)
-            except json.JSONDecodeError:
-                all_data = []
-    
-    # Añadir los nuevos datos
-    all_data.append(datos)
-    
-    # Guardar todos los datos en el archivo
-    with open(archivo_json, 'w', encoding='utf-8') as file:
-        json.dump(all_data, file, indent=4, ensure_ascii=False)
-
 @app.route('/ver_json')
+@login_required
 def ver_json():
     archivo_json = os.path.join(BASE_DIR, 'datos', 'datos.json')
     datos = []
@@ -226,35 +326,8 @@ def ver_json():
                           tipo_datos='json',
                           datos_json=datos)
 
-# Funciones para persistencia con archivos CSV
-def guardar_en_csv(datos):
-    archivo_csv = os.path.join(BASE_DIR, 'datos', 'datos.csv')
-    is_new_file = not os.path.exists(archivo_csv) or os.path.getsize(archivo_csv) == 0
-    
-    # Escapar comas en los datos para evitar problemas de formato
-    datos_escaped = {
-        'nombre': datos['nombre'].replace(',', '&#44;'),
-        'email': datos['email'].replace(',', '&#44;'),
-        'asunto': datos['asunto'].replace(',', '&#44;'),
-        'mensaje': datos['mensaje'].replace(',', '&#44;'),
-        'categoria': datos['categoria'].replace(',', '&#44;'),
-        'fecha': datos['fecha'].replace(',', '&#44;')
-    }
-    
-    try:
-        with open(archivo_csv, 'a', newline='', encoding='utf-8') as file:
-            # Si es un archivo nuevo, escribir el encabezado
-            if is_new_file:
-                file.write('nombre,email,asunto,mensaje,categoria,fecha\n')
-            
-            # Escribir los datos directamente
-            file.write(f"{datos_escaped['nombre']},{datos_escaped['email']},{datos_escaped['asunto']},{datos_escaped['mensaje']},{datos_escaped['categoria']},{datos_escaped['fecha']}\n")
-            
-            print(f"Datos guardados en CSV para: {datos['nombre']}")
-    except Exception as e:
-        print(f"Error al guardar en CSV: {e}")
-
 @app.route('/ver_csv')
+@login_required
 def ver_csv():
     archivo_csv = os.path.join(BASE_DIR, 'datos', 'datos.csv')
     datos = []
@@ -306,25 +379,8 @@ def ver_csv():
                           tipo_datos='csv',
                           datos_csv=datos)
 
-# Funciones para persistencia con SQLite
-def guardar_en_sqlite(datos):
-    try:
-        contacto = Contacto(
-            nombre=datos['nombre'],
-            email=datos['email'],
-            asunto=datos['asunto'],
-            mensaje=datos['mensaje'],
-            categoria=datos['categoria']
-        )
-        
-        db.session.add(contacto)
-        db.session.commit()
-        print("Datos guardados correctamente en SQLite")
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error al guardar en SQLite: {e}")
-
 @app.route('/ver_sqlite')
+@login_required
 def ver_sqlite():
     try:
         contactos = Contacto.query.all()
@@ -339,32 +395,8 @@ def ver_sqlite():
                             tipo_datos='sqlite',
                             contactos_sqlite=[])
 
-# Funciones para persistencia con MySQL
-def guardar_en_mysql(datos):
-    connection = get_connection()
-    if connection is None:
-        print("No se pudo conectar a MySQL para guardar los datos")
-        return
-    
-    try:
-        cursor = connection.cursor()
-        # Insertar un nuevo registro en la tabla usuarios
-        query = """
-        INSERT INTO usuarios (nombre, email) 
-        VALUES (%s, %s)
-        """
-        values = (datos['nombre'], datos['email'])
-        cursor.execute(query, values)
-        connection.commit()
-        print(f"Datos guardados correctamente en MySQL. ID: {cursor.lastrowid}")
-    except Error as e:
-        print(f"Error al guardar en MySQL: {e}")
-    finally:
-        if connection.is_connected():
-            cursor.close()
-            connection.close()
-
 @app.route('/ver_mysql')
+@login_required
 def ver_mysql():
     connection = get_connection()
     if connection is None:
@@ -394,14 +426,97 @@ def ver_mysql():
             cursor.close()
             connection.close()
 
-# Ruta para probar la conexión a MySQL
-@app.route('/test_db')
-def test_db():
-    result = test_connection()
-    return jsonify(result)
+# API para la autenticación (para uso con React)
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    data = request.get_json()
+    
+    # Verificar que se proporcionaron email y password
+    if not data or not data.get('email') or not data.get('password'):
+        return jsonify({'message': 'Datos incompletos'}), 400
+    
+    connection = get_connection()
+    if not connection:
+        return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+    
+    # Buscar usuario por email
+    user = User.get_by_email(connection, data.get('email'))
+    
+    if user and user.check_password(data.get('password')):
+        # Generar token JWT válido por 1 hora
+        expiration = datetime.utcnow() + timedelta(hours=1)
+        
+        # Crear payload del token con información del usuario
+        payload = {
+            'user_id': user.id,
+            'email': user.email,
+            'nombre': user.nombre,
+            'exp': expiration
+        }
+        
+        # Generar token con la clave secreta de la aplicación
+        import jwt
+        token = jwt.encode(payload, app.config['JWT_SECRET'], algorithm='HS256')
+        
+        connection.close()
+        
+        # Retornar token y datos básicos del usuario
+        return jsonify({
+            'token': token,
+            'user': {
+                'id': user.id,
+                'nombre': user.nombre,
+                'email': user.email
+            },
+            'message': 'Inicio de sesión exitoso'
+        })
+    
+    connection.close()
+    return jsonify({'message': 'Email o contraseña incorrectos'}), 401
 
-# API endpoints para acceso a datos
+@app.route('/api/register', methods=['POST'])
+def api_register():
+    data = request.get_json()
+    
+    # Verificar que se proporcionaron todos los datos necesarios
+    if not data or not data.get('nombre') or not data.get('email') or not data.get('password'):
+        return jsonify({'message': 'Datos incompletos'}), 400
+    
+    connection = get_connection()
+    if not connection:
+        return jsonify({'message': 'Error de conexión a la base de datos'}), 500
+    
+    # Verificar que el email no esté ya registrado
+    existing_user = User.get_by_email(connection, data.get('email'))
+    if existing_user:
+        connection.close()
+        return jsonify({'message': 'El email ya está registrado'}), 409
+    
+    # Crear nuevo usuario
+    user, error = User.create_user(
+        connection,
+        data.get('nombre'),
+        data.get('email'),
+        data.get('password')
+    )
+    
+    connection.close()
+    
+    if user:
+        return jsonify({
+            'message': 'Usuario registrado con éxito',
+            'user': {
+                'id': user.id,
+                'nombre': user.nombre,
+                'email': user.email
+            }
+        }), 201
+    else:
+        return jsonify({'message': f'Error al registrar usuario: {error}'}), 500
+
+# API endpoints para acceso a datos (protegidos mediante token JWT)
 @app.route('/api/datos/json')
+@login_required
 def api_datos_json():
     archivo_json = os.path.join(BASE_DIR, 'datos', 'datos.json')
     if os.path.exists(archivo_json):
@@ -415,6 +530,7 @@ def api_datos_json():
         return jsonify([])
 
 @app.route('/api/datos/csv')
+@login_required
 def api_datos_csv():
     archivo_csv = os.path.join(BASE_DIR, 'datos', 'datos.csv')
     datos = []
@@ -443,6 +559,7 @@ def api_datos_csv():
     return jsonify(datos)
 
 @app.route('/api/datos/sqlite')
+@login_required
 def api_datos_sqlite():
     try:
         contactos = Contacto.query.all()
@@ -451,6 +568,7 @@ def api_datos_sqlite():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/datos/mysql')
+@login_required
 def api_datos_mysql():
     connection = get_connection()
     if connection is None:
@@ -466,7 +584,7 @@ def api_datos_mysql():
         for user in usuarios:
             # Convertir datetime a string si es necesario
             serialized_user = {k: (v.strftime('%Y-%m-%d %H:%M:%S') if isinstance(v, datetime) else v) 
-                               for k, v in user.items()}
+                              for k, v in user.items()}
             serializable_users.append(serialized_user)
         
         return jsonify(serializable_users)
@@ -476,6 +594,112 @@ def api_datos_mysql():
         if connection.is_connected():
             cursor.close()
             connection.close()
+
+# Funciones para persistencia con archivos TXT
+def guardar_en_txt(datos):
+    archivo_txt = os.path.join(BASE_DIR, 'datos', 'datos.txt')
+    with open(archivo_txt, 'a', encoding='utf-8') as file:
+        file.write(f"\n--- Nuevo registro: {datos['fecha']} ---\n")
+        for key, value in datos.items():
+            file.write(f"{key}: {value}\n")
+        file.write("--------------------------------\n")
+
+# Funciones para persistencia con archivos JSON
+def guardar_en_json(datos):
+    archivo_json = os.path.join(BASE_DIR, 'datos', 'datos.json')
+    all_data = []
+    
+    # Comprobar si existe el archivo
+    if os.path.exists(archivo_json):
+        with open(archivo_json, 'r', encoding='utf-8') as file:
+            try:
+                all_data = json.load(file)
+            except json.JSONDecodeError:
+                all_data = []
+    
+    # Añadir los nuevos datos
+    all_data.append(datos)
+    
+    # Guardar todos los datos en el archivo
+    with open(archivo_json, 'w', encoding='utf-8') as file:
+        json.dump(all_data, file, indent=4, ensure_ascii=False)
+
+# Funciones para persistencia con archivos CSV
+def guardar_en_csv(datos):
+    archivo_csv = os.path.join(BASE_DIR, 'datos', 'datos.csv')
+    is_new_file = not os.path.exists(archivo_csv) or os.path.getsize(archivo_csv) == 0
+    
+    # Escapar comas en los datos para evitar problemas de formato
+    datos_escaped = {
+        'nombre': datos['nombre'].replace(',', '&#44;'),
+        'email': datos['email'].replace(',', '&#44;'),
+        'asunto': datos['asunto'].replace(',', '&#44;'),
+        'mensaje': datos['mensaje'].replace(',', '&#44;'),
+        'categoria': datos['categoria'].replace(',', '&#44;'),
+        'fecha': datos['fecha'].replace(',', '&#44;')
+    }
+    
+    try:
+        with open(archivo_csv, 'a', newline='', encoding='utf-8') as file:
+            # Si es un archivo nuevo, escribir el encabezado
+            if is_new_file:
+                file.write('nombre,email,asunto,mensaje,categoria,fecha\n')
+            
+            # Escribir los datos directamente
+            file.write(f"{datos_escaped['nombre']},{datos_escaped['email']},{datos_escaped['asunto']},{datos_escaped['mensaje']},{datos_escaped['categoria']},{datos_escaped['fecha']}\n")
+            
+            print(f"Datos guardados en CSV para: {datos['nombre']}")
+    except Exception as e:
+        print(f"Error al guardar en CSV: {e}")
+
+# Funciones para persistencia con SQLite
+def guardar_en_sqlite(datos):
+    try:
+        contacto = Contacto(
+            nombre=datos['nombre'],
+            email=datos['email'],
+            asunto=datos['asunto'],
+            mensaje=datos['mensaje'],
+            categoria=datos['categoria']
+        )
+        
+        db.session.add(contacto)
+        db.session.commit()
+        print("Datos guardados correctamente en SQLite")
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al guardar en SQLite: {e}")
+
+# Funciones para persistencia con MySQL
+def guardar_en_mysql(datos):
+    connection = get_connection()
+    if connection is None:
+        print("No se pudo conectar a MySQL para guardar los datos")
+        return
+    
+    try:
+        cursor = connection.cursor()
+        # Insertar un nuevo registro en la tabla usuarios
+        query = """
+        INSERT INTO usuarios (nombre, email) 
+        VALUES (%s, %s)
+        """
+        values = (datos['nombre'], datos['email'])
+        cursor.execute(query, values)
+        connection.commit()
+        print(f"Datos guardados correctamente en MySQL. ID: {cursor.lastrowid}")
+    except Error as e:
+        print(f"Error al guardar en MySQL: {e}")
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+
+# Ruta para probar la conexión a MySQL
+@app.route('/test_db')
+def test_db():
+    result = test_connection()
+    return jsonify(result)
 
 if __name__ == '__main__':
     print(f"Aplicación Flask iniciada. Base de datos SQLite: {app.config['SQLALCHEMY_DATABASE_URI']}")

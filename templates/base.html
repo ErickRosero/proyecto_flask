@@ -5,24 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Mi Aplicación Flask{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}">
 </head>
 <body>
     <header>
         <nav>
             <div class="logo">Mi Aplicación Flask</div>
             <ul class="nav-links">
-                <li><a href="{{ url_for('inicio') }}">Inicio</a></li>
-                <li><a href="{{ url_for('about') }}">Acerca de</a></li>
-                <li><a href="{{ url_for('formulario') }}">Formulario</a></li>
-                <li class="dropdown">
-                    <a href="#">Ver Datos</a>
-                    <div class="dropdown-content">
-                        <a href="{{ url_for('ver_txt') }}">TXT</a>
-                        <a href="{{ url_for('ver_json') }}">JSON</a>
-                        <a href="{{ url_for('ver_csv') }}">CSV</a>
-                        <a href="{{ url_for('ver_sqlite') }}">SQLite</a>
-                    </div>
-                </li>
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('inicio') }}">Inicio</a></li>
+                    <li><a href="{{ url_for('about') }}">Acerca de</a></li>
+                    <li><a href="{{ url_for('formulario') }}">Formulario</a></li>
+                    <li class="dropdown">
+                        <a href="#">Ver Datos</a>
+                        <div class="dropdown-content">
+                            <a href="{{ url_for('ver_txt') }}">TXT</a>
+                            <a href="{{ url_for('ver_json') }}">JSON</a>
+                            <a href="{{ url_for('ver_csv') }}">CSV</a>
+                            <a href="{{ url_for('ver_sqlite') }}">SQLite</a>
+                            <a href="{{ url_for('ver_mysql') }}">MySQL</a>
+                        </div>
+                    </li>
+                    <li><a href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}">Iniciar Sesión</a></li>
+                    <li><a href="{{ url_for('registro') }}">Registrarse</a></li>
+                    <li><a href="{{ url_for('about') }}">Acerca de</a></li>
+                {% endif %}
             </ul>
         </nav>
     </header>
