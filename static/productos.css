@@ -1,0 +1,91 @@
+/* Estilos adicionales para la gestión de productos */
+
+/* Tabla de productos */
+.table-producto {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table-producto th {
+    background-color: #3b5998;
+    color: white;
+}
+
+.btn-grupo-acciones {
+    white-space: nowrap;
+}
+
+/* Formularios */
+.form-producto .form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-producto .form-control:focus {
+    border-color: #3b5998;
+    box-shadow: 0 0 0 3px rgba(59, 89, 152, 0.2);
+}
+
+.card-producto {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.card-producto:hover {
+    transform: translateY(-5px);
+}
+
+.card-header-producto {
+    background-color: #3b5998;
+    color: white;
+    padding: 1.25rem;
+}
+
+/* Botones */
+.btn-accion {
+    transition: all 0.3s ease;
+    border-radius: 0.25rem;
+}
+
+.btn-accion:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-editar {
+    background-color: #f0ad4e;
+    border-color: #eea236;
+    color: white;
+}
+
+.btn-editar:hover {
+    background-color: #ec971f;
+    border-color: #d58512;
+}
+
+.btn-eliminar {
+    background-color: #d9534f;
+    border-color: #d43f3a;
+    color: white;
+}
+
+.btn-eliminar:hover {
+    background-color: #c9302c;
+    border-color: #ac2925;
+}
+
+/* Alerta de confirmación */
+.alerta-confirmacion {
+    border-left: 4px solid #d9534f;
+    background-color: #f9f2f4;
+    padding: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .btn-group-acciones .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+}

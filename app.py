@@ -13,6 +13,9 @@ import mysql.connector
 from mysql.connector import Error
 from models import User
 import secrets
+from models_producto import Producto, ProductoForm
+
+
 
 # Obtener la ruta absoluta del directorio actual
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -700,6 +703,149 @@ def guardar_en_mysql(datos):
 def test_db():
     result = test_connection()
     return jsonify(result)
+
+
+# Rutas para gestión de productos (CRUD)
+@app.route('/productos')
+@login_required
+def listar_productos():
+    connection = get_connection()
+    if connection is None:
+        flash("No se pudo conectar a MySQL", "danger")
+        return render_template('productos/listar.html', title='Productos', productos=[])
+    
+    try:
+        productos = Producto.obtener_todos(connection)
+        return render_template('productos/listar.html', title='Productos', productos=productos)
+    except Error as e:
+        flash(f"Error al obtener productos: {e}", "danger")
+        return render_template('productos/listar.html', title='Productos', productos=[])
+    finally:
+        if connection.is_connected():
+            connection.close()
+
+@app.route('/crear', methods=['GET', 'POST'])
+@login_required
+def crear_producto():
+    form = ProductoForm()
+    
+    if form.validate_on_submit():
+        connection = get_connection()
+        if connection is None:
+            flash("No se pudo conectar a MySQL", "danger")
+            return render_template('productos/crear.html', title='Crear Producto', form=form)
+        
+        try:
+            id_producto, error = Producto.crear(
+                connection,
+                form.nombre.data,
+                form.precio.data,
+                form.stock.data
+            )
+            
+            if id_producto:
+                flash('Producto creado con éxito', 'success')
+                return redirect(url_for('listar_productos'))
+            else:
+                flash(f'Error al crear producto: {error}', 'danger')
+        except Exception as e:
+            flash(f'Error inesperado: {str(e)}', 'danger')
+        finally:
+            if connection.is_connected():
+                connection.close()
+    
+    return render_template('productos/crear.html', title='Crear Producto', form=form)
+
+@app.route('/editar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def editar_producto(id):
+    connection = get_connection()
+    if connection is None:
+        flash("No se pudo conectar a MySQL", "danger")
+        return redirect(url_for('listar_productos'))
+    
+    try:
+        # Obtener el producto a editar
+        producto = Producto.obtener_por_id(connection, id)
+        
+        if not producto:
+            flash('Producto no encontrado', 'warning')
+            connection.close()
+            return redirect(url_for('listar_productos'))
+        
+        # Crear el formulario y cargar datos existentes
+        form = ProductoForm()
+        
+        # Si es POST y el formulario es válido, actualizar el producto
+        if form.validate_on_submit():
+            exito, error = Producto.actualizar(
+                connection,
+                id,
+                form.nombre.data,
+                form.precio.data,
+                form.stock.data
+            )
+            
+            if exito:
+                flash('Producto actualizado con éxito', 'success')
+                connection.close()
+                return redirect(url_for('listar_productos'))
+            else:
+                flash(f'Error al actualizar: {error}', 'danger')
+        
+        # Si es GET, cargar los datos del producto en el formulario
+        elif request.method == 'GET':
+            form.nombre.data = producto['nombre']
+            form.precio.data = float(producto['precio'])
+            form.stock.data = producto['stock']
+            
+        return render_template('productos/editar.html', title='Editar Producto', form=form, producto=producto)
+    
+    except Exception as e:
+        flash(f'Error inesperado: {str(e)}', 'danger')
+        return redirect(url_for('listar_productos'))
+    finally:
+        if connection and connection.is_connected():
+            connection.close()
+
+@app.route('/eliminar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def eliminar_producto(id):
+    connection = get_connection()
+    if connection is None:
+        flash("No se pudo conectar a MySQL", "danger")
+        return redirect(url_for('listar_productos'))
+    
+    try:
+        # Obtener el producto para mostrar información de confirmación
+        producto = Producto.obtener_por_id(connection, id)
+        
+        if not producto:
+            flash('Producto no encontrado', 'warning')
+            connection.close()
+            return redirect(url_for('listar_productos'))
+        
+        # Si es POST, proceder con la eliminación
+        if request.method == 'POST':
+            exito, error = Producto.eliminar(connection, id)
+            
+            if exito:
+                flash('Producto eliminado con éxito', 'success')
+            else:
+                flash(f'Error al eliminar producto: {error}', 'danger')
+                
+            connection.close()
+            return redirect(url_for('listar_productos'))
+            
+        # Si es GET, mostrar pantalla de confirmación
+        return render_template('productos/eliminar.html', title='Eliminar Producto', producto=producto)
+    
+    except Exception as e:
+        flash(f'Error inesperado: {str(e)}', 'danger')
+        return redirect(url_for('listar_productos'))
+    finally:
+        if connection and connection.is_connected():
+            connection.close()
 
 if __name__ == '__main__':
     print(f"Aplicación Flask iniciada. Base de datos SQLite: {app.config['SQLALCHEMY_DATABASE_URI']}")
